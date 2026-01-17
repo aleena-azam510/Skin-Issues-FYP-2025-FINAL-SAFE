@@ -21,3 +21,8 @@ spacy==3.8.7
 whitenoise>=6.5.0
 requests>=2.31.0
 ultralytics==8.3.223
+spacy>=3.5.0
+srsly>=2.4.6
+thinc>=8.1.9
+confection>=0.0.3
+ruamel.yaml>=0.17.30
