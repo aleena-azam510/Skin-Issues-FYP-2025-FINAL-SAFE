@@ -1,0 +1,69 @@
+services:
+  - type: web
+    name: skinpredictor-app
+    env: python
+    plan: free
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn skinpredictor.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      # Core Django
+      - key: SECRET_KEY
+        value: ""
+        fromDatabase: false
+      - key: DEBUG
+        value: "False"
+        fromDatabase: false
+      - key: ALLOWED_HOSTS
+        value: "<YOUR_RENDER_DOMAIN>,localhost,127.0.0.1"
+        fromDatabase: false
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://<YOUR_RENDER_DOMAIN>"
+        fromDatabase: false
+
+      # Database (Supabase PostgreSQL)
+      - key: DATABASE_URL
+        value: ""
+        fromDatabase: false
+
+      # Google OAuth
+      - key: GOOGLE_CLIENT_ID
+        value: ""
+        fromDatabase: false
+      - key: GOOGLE_SECRET
+        value: ""
+        fromDatabase: false
+
+      # GitHub OAuth
+      - key: GITHUB_CLIENT_ID
+        value: ""
+        fromDatabase: false
+      - key: GITHUB_SECRET
+        value: ""
+        fromDatabase: false
+
+      # Email settings
+      - key: EMAIL_HOST_USER
+        value: ""
+        fromDatabase: false
+      - key: EMAIL_HOST_PASSWORD
+        value: ""
+        fromDatabase: false
+      - key: EMAIL_HOST
+        value: ""
+        fromDatabase: false
+      - key: EMAIL_PORT
+        value: ""
+        fromDatabase: false
+
+      # Google API (Maps, Drive, etc.)
+      - key: GOOGLE_API_KEY
+        value: ""
+        fromDatabase: false
+
+      # Hugging Face API URL for AI inference
+      - key: HUGGING_FACE_API
+        value: ""
+        fromDatabase: false
+
+    autoDeploy: true
