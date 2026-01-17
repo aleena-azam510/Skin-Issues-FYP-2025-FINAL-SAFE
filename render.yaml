@@ -15,10 +15,10 @@ services:
         value: "False"
         fromDatabase: false
       - key: ALLOWED_HOSTS
-        value: "<YOUR_RENDER_DOMAIN>,localhost,127.0.0.1"
+        value: "skin-issues-fyp.onrender.com,localhost,127.0.0.1"
         fromDatabase: false
       - key: CSRF_TRUSTED_ORIGINS
-        value: "https://<YOUR_RENDER_DOMAIN>"
+        value: "https://skin-issues-fyp.onrender.com
         fromDatabase: false
 
       # Database (Supabase PostgreSQL)
