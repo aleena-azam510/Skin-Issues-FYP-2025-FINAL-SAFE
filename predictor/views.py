@@ -2,59 +2,41 @@ import os
 import io
 import json
 import logging
-import sys
-import traceback
 import base64
+from datetime import datetime
 
 import cv2
 import numpy as np
-import pandas as pd
 from PIL import Image, ImageDraw, ImageFont
+
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
+from django.utils import timezone
 
-from ultralytics import YOLO
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, ListItem, ListFlowable
 
-import joblib
-
+# Models
 from .models import (
     SkinCondition, SkinCondition_page, User, PersonalizedPlan, Article
 )
 from users.models import DoctorReport, SkinProgress, MyAIReport
+
+# Utility mappings
 from utils.aliases import CONDITION_ALIASES
 
-# --- END EXISTING IMPORTS ---
-
-import base64
-import json
-import io
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-from django.core.files.base import ContentFile
-from django.utils import timezone
-from PIL import Image
-
-from users.models import MyAIReport, SkinProgress
-from .models import SkinCondition
-from utils.aliases import CONDITION_ALIASES
-import logging
-
+# Logging setup
 logger = logging.getLogger(__name__)
 
-# -----------------------------
-# Hugging Face Space API
-# -----------------------------
+# Hugging Face Space API (your inference endpoint)
 HF_SPACE_API = "https://huggingface.co/spaces/aleenaazam/skin-issues-prediction-model/run/predict"
+
 # 1️⃣ Helper Functions (place them at the top)
 def save_prediction_result(user, detected_issues, confidence_scores, image=None):
     avg_confidence = sum(confidence_scores.values()) / len(confidence_scores) if confidence_scores else 0
