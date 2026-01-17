@@ -47,11 +47,53 @@ from PIL import Image
 from users.models import MyAIReport, SkinProgress
 from .models import SkinCondition
 from utils.aliases import CONDITION_ALIASES
+import logging
+
+logger = logging.getLogger(__name__)
 
 # -----------------------------
 # Hugging Face Space API
 # -----------------------------
 HF_SPACE_API = "https://huggingface.co/spaces/aleenaazam/skin-issues-prediction-model/run/predict"
+# 1️⃣ Helper Functions (place them at the top)
+def save_prediction_result(user, detected_issues, confidence_scores, image=None):
+    avg_confidence = sum(confidence_scores.values()) / len(confidence_scores) if confidence_scores else 0
+    return SkinProgress.objects.create(
+        user=user,
+        image=image,
+        detection_result=", ".join(detected_issues),
+        ai_confidence=avg_confidence,
+        confidence_scores_json=confidence_scores,
+        improvement_score=0,
+        age=getattr(user, 'age', 0),
+        gender=getattr(user, 'gender', 'Not specified')
+    )
+
+def get_baseline_progress(user):
+    try:
+        return SkinProgress.objects.filter(user=user).order_by('-created_at').first()
+    except Exception as e:
+        logger.error(f"Error retrieving baseline progress: {e}")
+        return None
+
+def analyze_progress(current_confidence_scores, baseline_progress):
+    if not baseline_progress or not hasattr(baseline_progress, 'confidence_scores_json') or not baseline_progress.confidence_scores_json:
+        return {"status": "New analysis complete, no baseline data for comparison."}
+    try:
+        baseline_scores = json.loads(baseline_progress.confidence_scores_json)
+    except Exception:
+        return {"status": "New analysis complete, baseline data is corrupted."}
+    improvements = {}
+    regressions = {}
+    for issue, current_score in current_confidence_scores.items():
+        if issue in baseline_scores:
+            baseline_score = baseline_scores[issue]
+            score_change = current_score - baseline_score
+            if score_change < -5.0:
+                improvements[issue] = f"Reduced from {baseline_score:.1f}% to {current_score:.1f}%"
+            elif score_change > 5.0:
+                regressions[issue] = f"Increased from {baseline_score:.1f}% to {current_score:.1f}%"
+    return {"status": "Comparison complete.", "improvements": improvements, "regressions": regressions}
 
 @login_required
 @csrf_exempt
